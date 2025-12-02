@@ -3,3 +3,6 @@ AffectNet
 
 # Secrets
 .env
+
+# All models are on - https://www.kaggle.com/datasets/manavukani/my-models/data
+*/models

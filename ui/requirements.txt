@@ -1,0 +1,17 @@
+# python -m venv venv
+# venv\Scripts\activate
+
+# Install torch & torchvision separately:
+# For Windows, install torch/torchvision using the official PyTorch install selector
+# CPU: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+# CUDA: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+streamlit>=1.20.0
+streamlit-webrtc>=0.44.0
+av>=10.0.0
+opencv-python>=4.6.0
+numpy>=1.24.0
+timm>=0.6.12
+Pillow>=9.0.0
+
+# - `streamlit-webrtc` requires `aiortc` and system ffmpeg for full realtime support.

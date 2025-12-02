@@ -1,3 +1,5 @@
+# streamlit run streamlit_app.py
+
 import io
 from pathlib import Path
 from typing import List, Tuple
@@ -202,7 +204,7 @@ def main():
 
     sidebar = st.sidebar
     sidebar.header("Controls")
-    weights_path = sidebar.text_input("Weights file", "vit_augmented_best_model.pth")
+    weights_path = sidebar.text_input("Weights file", "models/vit_augmented_best_model.pth") # model weights path
     conf_floor = sidebar.slider("Confidence threshold", 0.0, 1.0, 0.35, 0.05)
     show_info = sidebar.checkbox("Show SAGA summary", value=True)
 

@@ -1,3 +1,5 @@
+# python webcam_emotion.py
+
 import torch
 import torch.nn as nn
 import timm
@@ -6,9 +8,9 @@ import numpy as np
 from torchvision import transforms
 
 # -----------------------------
-# 1. LOAD MODEL EXACTLY AS TRAINED
+# 1. LOAD TRAINED MODEL
 # -----------------------------
-NUM_CLASSES = 8  # Change if needed
+NUM_CLASSES = 8
 
 def load_model(weights_path):
     model = timm.create_model("vit_base_patch16_224", pretrained=True)
@@ -128,7 +130,7 @@ def run_webcam(model):
 # 5. MAIN
 # -----------------------------
 if __name__ == "__main__":
-    weights = "vit_augmented_best_model.pth"  # change filename if needed
+    weights = "models/vit_augmented_best_model.pth"  # model weights path
     model = load_model(weights)
 
     run_webcam(model)
