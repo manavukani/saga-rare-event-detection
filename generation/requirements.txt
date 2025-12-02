@@ -1,0 +1,10 @@
+pandas
+pillow
+tqdm
+google-genai
+kaggle  
+ipython
+
+transformers
+torch
+scikit-image
