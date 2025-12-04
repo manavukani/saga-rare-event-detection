@@ -1,0 +1,28 @@
+
+# Need Python 3.11.0
+# - py -3.11 -m venv venv311
+# - venv311\Scripts\activate
+# - pip install -r requirements_lock_cpu.txt
+
+# Core incompatibility fix: Pin NumPy to 1.x
+numpy==1.26.4
+
+# Face Detection (Requires NumPy < 2)
+mediapipe==0.10.21
+
+# Compatible OpenCV version
+opencv-python==4.9.0.80
+opencv-contrib-python==4.9.0.80
+
+# If you use JAX, pin it to the last version supporting NumPy 1.x
+jax==0.4.30
+jaxlib==0.4.30
+
+# PyTorch ecosystem (Standard versions usually work with NumPy 1.x)
+torch
+torchvision
+torchaudio
+timm
+streamlit
+av
+streamlit-webrtc
