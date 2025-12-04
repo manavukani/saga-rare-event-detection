@@ -3,6 +3,7 @@
 import io
 from pathlib import Path
 from typing import List, Tuple
+import threading
 
 import cv2
 import numpy as np
@@ -218,6 +219,8 @@ def main():
     tab_realtime, tab_live, tab_upload, tab_project = st.tabs(
         ["Realtime Stream", "Camera Snapshot", "Upload Image", "Project Insights"]
     )
+    
+
 
     with tab_realtime:
         st.subheader("Realtime webcam")
@@ -231,24 +234,111 @@ def main():
                 "`pip install streamlit-webrtc av`."
             )
         else:
-            class EmotionTransformer(VideoTransformerBase):
+            # class EmotionTransformer(VideoTransformerBase):
+                # def __init__(self):
+                #     self.model = model
+                #     self.conf_floor = conf_floor
+
+                # def recv(self, frame):
+                #     bgr = frame.to_ndarray(format="bgr24")
+                #     annotated, _ = predict_emotions(bgr, self.model, self.conf_floor)
+                #     rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
+                #     return av.VideoFrame.from_ndarray(rgb, format="rgb24")
+
+            class OptimizedEmotionTransformer(VideoTransformerBase):
                 def __init__(self):
-                    self.model = model
+                    self.model = model  # Assumes model is passed from global scope or init
                     self.conf_floor = conf_floor
+                    
+                    # Optimization variables
+                    self.frame_count = 0
+                    self.skip_rate = 5  # Process only 1 out of every 5 frames
+                    self.last_results = [] # Store coordinates and labels
+                    self.lock = threading.Lock() # Thread safety for webrtc
 
                 def recv(self, frame):
-                    bgr = frame.to_ndarray(format="bgr24")
-                    annotated, _ = predict_emotions(bgr, self.model, self.conf_floor)
+                    # 1. Convert to numpy
+                    img = frame.to_ndarray(format="bgr24")
+                    
+                    # 2. Check if we should run the heavy processing
+                    if self.frame_count % self.skip_rate == 0:
+                        
+                        # OPTIMIZATION: Run detection on a smaller image (50% scale) for speed
+                        # Haar cascades are scale-invariant but much faster on small images
+                        small_frame = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+                        
+                        # Run detection on small frame
+                        faces_small = detect_faces(small_frame)
+                        
+                        # Scale boxes back up to original size
+                        faces = [(x*2, y*2, w*2, h*2) for (x, y, w, h) in faces_small]
+                        
+                        new_results = []
+                        
+                        # Run Model Inference
+                        # Note: We still crop from the ORIGINAL high-res 'img' for accuracy
+                        for (x, y, w, h) in faces:
+                            face_roi = img[y : y + h, x : x + w]
+                            # Safety check for empty slices
+                            if face_roi.size == 0: continue 
+                            
+                            rgb_face = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB)
+                            img_t = transform(rgb_face).unsqueeze(0)
+
+                            with torch.no_grad():
+                                logits = self.model(img_t)
+                                probs = torch.softmax(logits, dim=1).squeeze(0)
+                                conf, idx = torch.max(probs, dim=0)
+
+                            conf_val = float(conf.item())
+                            if conf_val < self.conf_floor:
+                                continue
+
+                            label = EMOTION_LABELS[int(idx.item())]
+                            new_results.append({
+                                "box": (x, y, w, h),
+                                "label": label,
+                                "conf": conf_val
+                            })
+                        
+                        # Update shared results safely
+                        with self.lock:
+                            self.last_results = new_results
+
+                    self.frame_count += 1
+
+                    # 3. Draw the LAST KNOWN results on the CURRENT frame
+                    # This makes the video look smooth even if inference is slow
+                    annotated = img.copy()
+                    
+                    with self.lock:
+                        for res in self.last_results:
+                            x, y, w, h = res["box"]
+                            label = res["label"]
+                            conf_val = res["conf"]
+                            
+                            cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                            cv2.putText(
+                                annotated,
+                                f"{label} ({conf_val*100:.0f}%)",
+                                (x, max(y - 10, 20)),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.65,
+                                (0, 255, 0),
+                                2,
+                            )
+
+                    # 4. Return video frame
                     rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
                     return av.VideoFrame.from_ndarray(rgb, format="rgb24")
 
             webrtc_streamer(
                 key="emotion-realtime",
-                video_transformer_factory=EmotionTransformer,
+                video_transformer_factory=OptimizedEmotionTransformer,
                 media_stream_constraints={"video": True, "audio": False},
                 async_transform=False,
             )
-
+    
     with tab_live:
         st.subheader("Capture from camera")
         st.write("Use the camera widget to take a snapshot; all faces will be labeled with emotion + confidence.")
@@ -293,7 +383,6 @@ def main():
                 **Result:** +4.5% accuracy uplift and better minority-class recognition on a sealed golden test set.
                 """
             )
-
 
 if __name__ == "__main__":
     main()
