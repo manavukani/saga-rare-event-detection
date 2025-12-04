@@ -330,6 +330,9 @@ def main():
     show_info = sidebar.checkbox("Show SAGA summary", value=True)
 
     if not HAS_MEDIAPIPE:
+        sidebar.warning(
+            "mediapipe not installed"
+        )
         print("\n\n=========== ⚠️ mediapipe not installed. Using slower Haar Cascades. ===========\n\n")
 
     if not Path(weights_path).exists():
