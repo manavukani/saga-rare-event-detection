@@ -36,15 +36,88 @@ Our solution follows a multi-stage approach:
 │   ├── augmented_training.ipynb # Model Retraining Script on Combined Data
 │   └── Model_Decisions.md       # Architecture choices
 │
+├── ui/                          # Demo Application
+│   ├── streamlit_app.py         # Streamlit web app for real-time emotion detection
+│   ├── requirements.txt         # UI dependencies
+│   └── models/                  # Pre-trained model weights (download from Kaggle)
+│
 ├── .gitignore                   # Ignore heavy dataset, etc.
 └── README.md                    # What you are reading ;)
 ```
 
-> **Note:** The AffectNet dataset is large (\>5GB). Use this [Kaggle Link](https://www.kaggle.com/datasets/manavukani/affectnet) to access the processed data.
+### **Note:**
+- The AffectNet dataset is large (\>5GB). Use this [Kaggle Link - Dataset](https://www.kaggle.com/datasets/manavukani/affectnet) to access the augmented dataset.
+- Download fine tuned models from this [Kaggle Link - Models](https://www.kaggle.com/datasets/manavukani/my-models/data) 
 
 -----
 
-## 🚀 How to Run
+## How to Run - Interactive Demo
+
+We've built a real-time emotion detection demo using Streamlit that allows you to:
+
+* **Upload Images:** Test the model on your own facial images
+* **Live Webcam Detection:** Real-time emotion recognition from your webcam
+* **Model Comparison:** Switch between baseline and SAGA-augmented models
+* **Batch Processing:** Upload multiple images at once
+
+### Installation
+
+1. **Navigate to the UI folder:**
+   ```bash
+   cd ui
+   ```
+
+2. **Create a virtual environment (recommended):**
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate # Windows
+   ```
+
+3. **Install dependencies:**
+   
+   For **CPU-only** setup:
+   ```bash
+   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+   pip install -r requirements.txt
+   ```
+   
+   For **GPU (CUDA 12.1)** setup:
+   ```bash
+   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+   pip install -r requirements.txt
+   ```
+
+4. Downloading the Model Weights from Kaggle:
+      - Use this [link](https://www.kaggle.com/datasets/manavukani/my-models/data) for downloading the model weights.
+      - Add them to `ui/models` folder
+
+### Running the Demo
+
+1. **Start the Streamlit app:**
+   ```bash
+   streamlit run streamlit_app.py
+   ```
+
+2. **Access the app:**
+   Open your browser and navigate to `http://localhost:8501`
+
+3. **Features:**
+   * **Image Upload Mode:** Upload single or multiple facial images to see emotion predictions
+   * **Webcam Mode:** Enable real-time emotion detection (requires webcam access)
+   * **Confidence Threshold:** Adjust the minimum confidence for predictions
+   * **Model Selection:** Compare results between baseline and augmented models
+
+### Model Files
+
+The UI requires pre-trained model weights in the `ui/models/` directory:
+* `vit_baseline_best_model.pth` - Baseline ViT model
+* `vit_augmented_best_model.pth` - SAGA-augmented ViT model
+
+> **Note:** Webcam functionality requires `streamlit-webrtc` and system `ffmpeg` for full real-time support. The app gracefully falls back to image upload mode if webcam dependencies are unavailable.
+
+-----
+
+## How to Run - SAGA Pipeline, Model Training
 
 **Prerequisites:** This project requires GPU acceleration (Kaggle T4 x2 or Colab Pro recommended).
 
@@ -89,7 +162,7 @@ This project uses the Gemini API for generation.
 
 -----
 
-## 📊 Key Results
+## Key Results
 The README section has been updated with the new performance metrics extracted from your logs.
 
 Here is the revised section:
